@@ -1,15 +1,21 @@
 package service
 
-import "github.com/BesimK/go-ecommerce-app/internal/domain"
+import (
+	"fmt"
+
+	"github.com/BesimK/go-ecommerce-app/internal/domain"
+	"github.com/BesimK/go-ecommerce-app/internal/dto"
+)
 
 type UserService struct{}
 
-func (s UserService) FindUserByEmail(email string) (*domain.User, error) {
-	return nil, nil
+func (s UserService) Signup(input dto.UserSignup) (string, error) {
+	return "this-is-my-token-as-of-now", nil
 }
 
-func (s UserService) Signup(input any) (string, error) {
-	return "", nil
+func (s UserService) findUserByEmail(email string) (*domain.User, error) {
+	fmt.Println(email)
+	return nil, nil
 }
 
 func (s UserService) GetVerificationCode(e domain.User) (int, error) {
@@ -32,11 +38,11 @@ func (s UserService) BecomeSeller(e domain.User) (int, error) {
 	return 0, nil
 }
 
-func (s UserService) FindCart(e domain.User) (int, error) {
+func (s UserService) FindCart([]interface{}) (int, error) {
 	return 0, nil
 }
 
-func (s UserService) CreateCart(e domain.User) (int, error) {
+func (s UserService) CreateCart(input any, u domain.User) (int, error) {
 	return 0, nil
 }
 

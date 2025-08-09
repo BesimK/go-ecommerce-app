@@ -6,15 +6,23 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/BesimK/go-ecommerce-app/internal/api/rest"
+	"github.com/BesimK/go-ecommerce-app/internal/dto"
+	"github.com/BesimK/go-ecommerce-app/internal/service"
 )
 
-type UserHandler struct{}
+type UserHandler struct {
+	svc service.UserService
+}
 
 func SetupUserRoutes(rh *rest.RestHandler) {
 	app := rh.App
 
+	svc := service.UserService{}
+
 	// Create an instance of user service & inject to handler
-	handler := UserHandler{}
+	handler := UserHandler{
+		svc: svc,
+	}
 
 	// Public endpoints
 	app.Post("/register", handler.Register)
@@ -38,8 +46,23 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 }
 
 func (h *UserHandler) Register(ctx *fiber.Ctx) error {
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "register",
+	user := dto.UserSignup{}
+	if err := ctx.BodyParser(&user); err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": "Geçerli bir giriş sağlayın",
+		})
+	}
+
+	token, err := h.svc.Signup(user)
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "Kullanıcı kaydı sırasında bir hata oluştu",
+		})
+	}
+
+	return ctx.Status(http.StatusCreated).JSON(&fiber.Map{
+		"message": "Kullanıcı başarıyla kaydedildi",
+		"token":   token,
 	})
 }
 
