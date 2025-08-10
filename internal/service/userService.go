@@ -1,25 +1,67 @@
 package service
 
 import (
+	"errors"
 	"fmt"
+	"log"
 
 	"github.com/BesimK/go-ecommerce-app/internal/domain"
 	"github.com/BesimK/go-ecommerce-app/internal/dto"
+	"github.com/BesimK/go-ecommerce-app/internal/repository"
 )
 
-type UserService struct{}
+type UserService struct {
+	Repo repository.UserRepository
+}
 
 func (s UserService) Signup(input dto.UserSignup) (string, error) {
-	return "this-is-my-token-as-of-now", nil
+	fmt.Println(input)
+
+	user, err := s.Repo.CreateUser(domain.User{
+		Email:    input.Email,
+		Password: input.Password,
+		Phone:    input.Phone,
+	})
+	if err != nil {
+		fmt.Println("Existing User")
+	}
+
+	// generate token
+	log.Println(user)
+
+	userInfo := fmt.Sprintf(
+		"%v, %v, %v, %v",
+		user.ID,
+		user.Email,
+		user.Email,
+		user.UserType,
+	)
+
+	return userInfo, nil
 }
 
 func (s UserService) findUserByEmail(email string) (*domain.User, error) {
-	fmt.Println(email)
-	return nil, nil
+	user, err := s.Repo.FindUser(email)
+	if err != nil {
+		log.Printf("error finding user by email %v", err)
+		return nil, errors.New("had problem")
+	}
+
+	return &user, nil
 }
 
 func (s UserService) GetVerificationCode(e domain.User) (int, error) {
 	return 0, nil
+}
+
+func (s UserService) Login(email string, password string) (string, error) {
+	user, err := s.findUserByEmail(email)
+	if err != nil {
+		return "", errors.New("user does not exist with the provided email id")
+	}
+
+	// compate password and generate token
+	return user.Email, nil
 }
 
 func (s UserService) CreateProfile(id uint, input any) error {

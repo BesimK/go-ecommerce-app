@@ -7,6 +7,7 @@ import (
 
 	"github.com/BesimK/go-ecommerce-app/internal/api/rest"
 	"github.com/BesimK/go-ecommerce-app/internal/dto"
+	"github.com/BesimK/go-ecommerce-app/internal/repository"
 	"github.com/BesimK/go-ecommerce-app/internal/service"
 )
 
@@ -17,7 +18,9 @@ type UserHandler struct {
 func SetupUserRoutes(rh *rest.RestHandler) {
 	app := rh.App
 
-	svc := service.UserService{}
+	svc := service.UserService{
+		Repo: repository.NewUserRepository(rh.DB),
+	}
 
 	// Create an instance of user service & inject to handler
 	handler := UserHandler{
@@ -67,8 +70,23 @@ func (h *UserHandler) Register(ctx *fiber.Ctx) error {
 }
 
 func (h *UserHandler) Login(ctx *fiber.Ctx) error {
+	loginInput := dto.UserLogin{}
+	if err := ctx.BodyParser(&loginInput); err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "error while sign in",
+		})
+	}
+
+	token, err := h.svc.Login(loginInput.Email, loginInput.Password)
+	if err != nil {
+		return ctx.Status(http.StatusUnauthorized).JSON(&fiber.Map{
+			"message": "error creating token",
+		})
+	}
+
 	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "login",
+		"message": "login successful",
+		"token":   token,
 	})
 }
 

@@ -14,8 +14,7 @@ type AppConfig struct {
 
 func SetupEnv() (cfg AppConfig) {
 	godotenv.Load()
-	
-	var	name:string = "Bes"
+
 	port := os.Getenv("PORT")
 
 	if len(port) < 1 {
