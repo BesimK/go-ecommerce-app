@@ -2,42 +2,35 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/BesimK/go-ecommerce-app/internal/domain"
 	"github.com/BesimK/go-ecommerce-app/internal/dto"
+	"github.com/BesimK/go-ecommerce-app/internal/helper"
 	"github.com/BesimK/go-ecommerce-app/internal/repository"
 )
 
 type UserService struct {
 	Repo repository.UserRepository
+	Auth helper.Auth
 }
 
 func (s UserService) Signup(input dto.UserSignup) (string, error) {
-	fmt.Println(input)
+	hPassword, err := s.Auth.CreateHashedPassword(input.Password)
+	if err != nil {
+		return "", nil
+	}
 
 	user, err := s.Repo.CreateUser(domain.User{
 		Email:    input.Email,
-		Password: input.Password,
+		Password: hPassword,
 		Phone:    input.Phone,
 	})
 	if err != nil {
-		fmt.Println("Existing User")
+		log.Println("This user exists")
+		return "", errors.New("this user already exist")
 	}
-
-	// generate token
-	log.Println(user)
-
-	userInfo := fmt.Sprintf(
-		"%v, %v, %v, %v",
-		user.ID,
-		user.Email,
-		user.Email,
-		user.UserType,
-	)
-
-	return userInfo, nil
+	return s.Auth.GenerateToken(user.ID, user.Email, user.UserType)
 }
 
 func (s UserService) findUserByEmail(email string) (*domain.User, error) {
@@ -60,8 +53,12 @@ func (s UserService) Login(email string, password string) (string, error) {
 		return "", errors.New("user does not exist with the provided email id")
 	}
 
-	// compate password and generate token
-	return user.Email, nil
+	err = s.Auth.VerifyPassword(password, user.Password)
+	if err != nil {
+		return "", err
+	}
+
+	return s.Auth.GenerateToken(user.ID, user.Email, user.UserType)
 }
 
 func (s UserService) CreateProfile(id uint, input any) error {
@@ -80,7 +77,7 @@ func (s UserService) BecomeSeller(e domain.User) (int, error) {
 	return 0, nil
 }
 
-func (s UserService) FindCart([]interface{}) (int, error) {
+func (s UserService) FindCart([]any) (int, error) {
 	return 0, nil
 }
 

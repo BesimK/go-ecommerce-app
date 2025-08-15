@@ -11,6 +11,7 @@ import (
 	"github.com/BesimK/go-ecommerce-app/internal/api/rest"
 	"github.com/BesimK/go-ecommerce-app/internal/api/rest/handlers"
 	"github.com/BesimK/go-ecommerce-app/internal/domain"
+	"github.com/BesimK/go-ecommerce-app/internal/helper"
 )
 
 func StartServer(config config.AppConfig) {
@@ -23,9 +24,13 @@ func StartServer(config config.AppConfig) {
 
 	log.Println("database connected!")
 	db.AutoMigrate(&domain.User{})
+
+	auth := helper.SetupAuth(config.AppSecret)
+
 	rh := &rest.RestHandler{
-		App: app,
-		DB:  db,
+		App:  app,
+		DB:   db,
+		Auth: auth,
 	}
 
 	setupRoutes(rh)

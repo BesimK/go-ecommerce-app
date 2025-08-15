@@ -1,6 +1,9 @@
+// Package handlers are the package
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -9,6 +12,7 @@ import (
 	"github.com/BesimK/go-ecommerce-app/internal/dto"
 	"github.com/BesimK/go-ecommerce-app/internal/repository"
 	"github.com/BesimK/go-ecommerce-app/internal/service"
+	"github.com/BesimK/go-ecommerce-app/internal/utils"
 )
 
 type UserHandler struct {
@@ -27,53 +31,58 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 		svc: svc,
 	}
 
+	pubRoutes := app.Group("/users")
 	// Public endpoints
-	app.Post("/register", handler.Register)
-	app.Post("/login", handler.Login)
+	pubRoutes.Post("/register", handler.Register)
+	pubRoutes.Post("/login", handler.Login)
 
+	pvtRoutes := app.Group("/", rh.Auth.Authorize)
 	// Private endpoints
-	app.Get("/verify", handler.GetVerificationCode)
-	app.Post("/verify", handler.Verify)
-	app.Get("/profile", handler.GetProfile)
-	app.Post("/profile", handler.CreateProfile)
+	pvtRoutes.Get("/verify", handler.GetVerificationCode)
+	pvtRoutes.Post("/verify", handler.Verify)
+	pvtRoutes.Get("/profile", handler.GetProfile)
+	pvtRoutes.Post("/profile", handler.CreateProfile)
 
 	// Cart endpoints
-	app.Post("/cart", handler.AddToCart)
-	app.Get("/cart", handler.GetCart)
+	pvtRoutes.Post("/cart", handler.AddToCart)
+	pvtRoutes.Get("/cart", handler.GetCart)
 
 	// Order endpoints
-	app.Get("/order", handler.GetOrders)
-	app.Get("/order/:id", handler.GetOrderById)
+	pvtRoutes.Get("/order", handler.GetOrders)
+	pvtRoutes.Get("/order/:id", handler.GetOrderByID)
 
-	app.Post("/become-seller", handler.BecomeSeller)
+	pvtRoutes.Post("/become-seller", handler.BecomeSeller)
 }
 
 func (h *UserHandler) Register(ctx *fiber.Ctx) error {
 	user := dto.UserSignup{}
-	if err := ctx.BodyParser(&user); err != nil {
+
+	if err := utils.ParseValidated(ctx, &user); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
-			"message": "Geçerli bir giriş sağlayın",
+			"message": err.Error(),
 		})
 	}
 
 	token, err := h.svc.Signup(user)
 	if err != nil {
+		log.Printf("Signup error: %v", err)
 		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
-			"message": "Kullanıcı kaydı sırasında bir hata oluştu",
+			"message": err.Error(),
 		})
 	}
 
 	return ctx.Status(http.StatusCreated).JSON(&fiber.Map{
-		"message": "Kullanıcı başarıyla kaydedildi",
+		"message": "User registered successfully",
 		"token":   token,
 	})
 }
 
 func (h *UserHandler) Login(ctx *fiber.Ctx) error {
 	loginInput := dto.UserLogin{}
-	if err := ctx.BodyParser(&loginInput); err != nil {
-		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
-			"message": "error while sign in",
+
+	if err := utils.ParseValidated(ctx, &loginInput); err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": err.Error(),
 		})
 	}
 
@@ -109,8 +118,11 @@ func (h *UserHandler) CreateProfile(ctx *fiber.Ctx) error {
 }
 
 func (h *UserHandler) GetProfile(ctx *fiber.Ctx) error {
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
+	user := h.svc.Auth.GetCurrentUser(ctx)
+	log.Println(user)
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "GetProfile",
+		"user":    user,
 	})
 }
 
@@ -132,7 +144,7 @@ func (h *UserHandler) GetOrders(ctx *fiber.Ctx) error {
 	})
 }
 
-func (h *UserHandler) GetOrderById(ctx *fiber.Ctx) error {
+func (h *UserHandler) GetOrderByID(ctx *fiber.Ctx) error {
 	orderID := ctx.Params("id")
 	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
 		"message": "GetOrderById",

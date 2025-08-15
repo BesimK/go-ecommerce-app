@@ -7,25 +7,34 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	envPort      = "PORT"
+	envDSN       = "DSN"
+	envAPPSECRET = "APPSECRET"
+)
+
 type AppConfig struct {
 	ServerPort string
 	Dsn        string
+	AppSecret  string
+}
+
+func getEnvOrFail(key string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		log.Fatalf("%s could not be found in environment variables", key)
+	}
+	return val
 }
 
 func SetupEnv() (cfg AppConfig) {
-	godotenv.Load()
-
-	port := os.Getenv("PORT")
-
-	if len(port) < 1 {
-		log.Fatalln("config file is not loaded properly")
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	Dsn := os.Getenv("DSN")
-
-	if len(Dsn) < 1 {
-		log.Fatalln("config file is not loaded properly")
+	return AppConfig{
+		ServerPort: getEnvOrFail(envPort),
+		Dsn:        getEnvOrFail(envDSN),
+		AppSecret:  getEnvOrFail(envAPPSECRET),
 	}
-
-	return AppConfig{ServerPort: port, Dsn: Dsn}
 }
