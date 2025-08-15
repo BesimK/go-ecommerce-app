@@ -1,3 +1,3 @@
 hot:
-	@echo "Fat Juicy & Wet ⚥"
+	@echo "🦍 APE. STRONG. TOGETHER. 🦍"
 	@air

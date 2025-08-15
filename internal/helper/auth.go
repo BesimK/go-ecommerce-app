@@ -89,10 +89,9 @@ func (a Auth) VerifyToken(t string) (domain.User, error) {
 	}
 
 	tokenStr := tokenArr[1]
-
 	token, err := jwt.Parse(
 		tokenStr,
-		func(token *jwt.Token) (interface{}, error) {
+		func(token *jwt.Token) (any, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf(
 					"unknown signing method %v",
@@ -134,7 +133,7 @@ func (a Auth) Authorize(ctx *fiber.Ctx) error {
 	} else {
 		return ctx.Status(http.StatusUnauthorized).JSON(&fiber.Map{
 			"message": "autorization failed",
-			"reason":  err,
+			"reason":  err.Error(),
 		})
 	}
 }
@@ -142,4 +141,8 @@ func (a Auth) Authorize(ctx *fiber.Ctx) error {
 func (a Auth) GetCurrentUser(ctx *fiber.Ctx) domain.User {
 	user := ctx.Locals("user")
 	return user.(domain.User)
+}
+
+func (a Auth) GenerateCode() (int, error) {
+	return RandomNumbers(6)
 }

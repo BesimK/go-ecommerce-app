@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"log"
+	"time"
 
 	"github.com/BesimK/go-ecommerce-app/internal/domain"
 	"github.com/BesimK/go-ecommerce-app/internal/dto"
@@ -43,8 +44,33 @@ func (s UserService) findUserByEmail(email string) (*domain.User, error) {
 	return &user, nil
 }
 
+func (s UserService) isVerifiedUser(id uint) bool {
+	currentUser, err := s.Repo.FindUserByID(id)
+
+	return currentUser.Verified && err == nil
+}
+
 func (s UserService) GetVerificationCode(e domain.User) (int, error) {
-	return 0, nil
+	if s.isVerifiedUser(e.ID) {
+		return 0, nil
+	}
+
+	code, err := s.Auth.GenerateCode()
+	if err != nil {
+		return 0, err
+	}
+
+	user := domain.User{
+		Expiry: time.Now().Add(30 * time.Minute),
+		Code:   code,
+	}
+
+	if _, err := s.Repo.UpdateUser(e.ID, user); err != nil {
+		return 0, errors.New("unable to update verication code")
+	}
+
+	// TODO Send SMS
+	return code, nil
 }
 
 func (s UserService) Login(email string, password string) (string, error) {

@@ -2,7 +2,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -10,9 +9,9 @@ import (
 
 	"github.com/BesimK/go-ecommerce-app/internal/api/rest"
 	"github.com/BesimK/go-ecommerce-app/internal/dto"
+	"github.com/BesimK/go-ecommerce-app/internal/helper"
 	"github.com/BesimK/go-ecommerce-app/internal/repository"
 	"github.com/BesimK/go-ecommerce-app/internal/service"
-	"github.com/BesimK/go-ecommerce-app/internal/utils"
 )
 
 type UserHandler struct {
@@ -57,7 +56,7 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 func (h *UserHandler) Register(ctx *fiber.Ctx) error {
 	user := dto.UserSignup{}
 
-	if err := utils.ParseValidated(ctx, &user); err != nil {
+	if err := helper.ParseValidated(ctx, &user); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": err.Error(),
 		})
@@ -80,7 +79,7 @@ func (h *UserHandler) Register(ctx *fiber.Ctx) error {
 func (h *UserHandler) Login(ctx *fiber.Ctx) error {
 	loginInput := dto.UserLogin{}
 
-	if err := utils.ParseValidated(ctx, &loginInput); err != nil {
+	if err := helper.ParseValidated(ctx, &loginInput); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": err.Error(),
 		})
@@ -100,8 +99,18 @@ func (h *UserHandler) Login(ctx *fiber.Ctx) error {
 }
 
 func (h *UserHandler) GetVerificationCode(ctx *fiber.Ctx) error {
+	user := h.svc.Auth.GetCurrentUser(ctx)
+
+	code, err := h.svc.GetVerificationCode(user)
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "unable to generate verification code",
+		})
+	}
+
 	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "GetVerificationCode",
+		"message": "verification code generated successfully",
+		"data":    code,
 	})
 }
 
