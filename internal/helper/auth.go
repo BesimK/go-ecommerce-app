@@ -54,7 +54,9 @@ func (a Auth) GenerateToken(
 		"exp":     time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 
-	tokenStr, err := token.SignedString([]byte(a.Secret))
+	tokenStr, err := token.SignedString(
+		[]byte("a-string-secret-at-least-256-bits-long"),
+	)
 	if err != nil {
 		return "", errors.New("error signing string")
 	}
