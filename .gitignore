@@ -38,3 +38,5 @@ build/
 # Go module cache (if you ever vendor it accidentally)
 pkg/
 bin/
+
+.env
