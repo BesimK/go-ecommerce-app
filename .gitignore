@@ -1,0 +1,40 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, benchmark results
+*.test
+*.out
+
+# Output of the go coverage tool
+*.coverprofile
+*.cover.out
+*.cov
+
+# Logs
+*.log
+
+# Dependency directories (vendor, modules)
+vendor/
+go.sum
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Temp/build/cache
+tmp/
+build/
+*.tmp
+
+# Go module cache (if you ever vendor it accidentally)
+pkg/
+bin/
