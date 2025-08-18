@@ -41,7 +41,7 @@ func StartServer(config config.AppConfig) {
 }
 
 func runMigrations(db *gorm.DB) {
-	models := []interface{}{
+	models := []any{
 		&domain.User{},
 		&domain.BankAccount{},
 	}
@@ -49,6 +49,4 @@ func runMigrations(db *gorm.DB) {
 	if err := db.AutoMigrate(models...); err != nil {
 		log.Fatalf("Error running migrations: %v", err)
 	}
-
-	log.Println("Database migrations completed successfully!")
 }

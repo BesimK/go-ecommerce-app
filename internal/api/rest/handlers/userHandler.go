@@ -101,7 +101,7 @@ func (h *UserHandler) Login(ctx *fiber.Ctx) error {
 func (h *UserHandler) GetVerificationCode(ctx *fiber.Ctx) error {
 	user := h.svc.Auth.GetCurrentUser(ctx)
 
-	code, err := h.svc.GetVerificationCode(user)
+	err := h.svc.GetVerificationCode(user)
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
 			"message": "unable to generate verification code",
@@ -110,13 +110,10 @@ func (h *UserHandler) GetVerificationCode(ctx *fiber.Ctx) error {
 
 	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
 		"message": "verification code generated successfully",
-		"data":    code,
 	})
 }
 
 func (h *UserHandler) Verify(ctx *fiber.Ctx) error {
-	user := h.svc.Auth.GetCurrentUser(ctx)
-
 	var req dto.VerificationCodeInput
 	if err := helper.ParseValidated(ctx, req); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
