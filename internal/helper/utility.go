@@ -3,6 +3,7 @@ package helper
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -38,7 +39,7 @@ var validate = validator.New()
 
 func ParseValidated(ctx *fiber.Ctx, dest any) error {
 	if err := ctx.BodyParser(dest); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
+		return errors.New("invalid request body")
 	}
 
 	err := validate.Struct(dest)

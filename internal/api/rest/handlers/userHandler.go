@@ -30,12 +30,12 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 		svc: svc,
 	}
 
-	pubRoutes := app.Group("/users")
+	pubRoutes := app.Group("/")
 	// Public endpoints
 	pubRoutes.Post("/register", handler.Register)
 	pubRoutes.Post("/login", handler.Login)
 
-	pvtRoutes := app.Group("/", rh.Auth.Authorize)
+	pvtRoutes := app.Group("/users", rh.Auth.Authorize)
 	// Private endpoints
 	pvtRoutes.Get("/verify", handler.GetVerificationCode)
 	pvtRoutes.Post("/verify", handler.Verify)
@@ -174,7 +174,7 @@ func (h *UserHandler) BecomeSeller(ctx *fiber.Ctx) error {
 
 	if err := helper.ParseValidated(ctx, &req); err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
-			"message": "failed to parse",
+			"message": err.Error(),
 		})
 	}
 
