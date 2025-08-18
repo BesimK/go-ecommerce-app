@@ -17,6 +17,7 @@ type UserRepository interface {
 	UpdateUser(id uint, u domain.User) (domain.User, error)
 
 	// more functions will be shown!!
+	CreateBankAccount(e domain.BankAccount) error
 }
 
 type userRepository struct {
@@ -79,4 +80,8 @@ func (r userRepository) UpdateUser(
 	}
 
 	return user, nil
+}
+
+func (r userRepository) CreateBankAccount(e domain.BankAccount) error {
+	return r.db.Create(&e).Error
 }

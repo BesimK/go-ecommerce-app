@@ -19,10 +19,10 @@ func StartServer(config config.AppConfig) {
 
 	db, err := gorm.Open(postgres.Open(config.Dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("database connection error %v\n", err)
+		log.Fatalf("Database connection error: %v", err)
 	}
 
-	db.AutoMigrate(&domain.User{})
+	runMigrations(db)
 
 	auth := helper.SetupAuth(config.AppSecret)
 
@@ -35,5 +35,20 @@ func StartServer(config config.AppConfig) {
 
 	handlers.SetupUserRoutes(rh)
 
-	app.Listen(config.ServerPort)
+	if err := app.Listen(config.ServerPort); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+}
+
+func runMigrations(db *gorm.DB) {
+	models := []interface{}{
+		&domain.User{},
+		&domain.BankAccount{},
+	}
+
+	if err := db.AutoMigrate(models...); err != nil {
+		log.Fatalf("Error running migrations: %v", err)
+	}
+
+	log.Println("Database migrations completed successfully!")
 }
