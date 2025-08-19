@@ -140,6 +140,30 @@ func (a Auth) Authorize(ctx *fiber.Ctx) error {
 	}
 }
 
+func (a Auth) AuthorizeSeller(ctx *fiber.Ctx) error {
+	authHeader := ctx.GetReqHeaders()["Authorization"]
+	if len(authHeader) == 0 {
+		return errors.New("not provided token")
+	}
+
+	user, err := a.VerifyToken(authHeader[0])
+
+	if err != nil {
+		return ctx.Status(http.StatusUnauthorized).JSON(&fiber.Map{
+			"message": "autorization failed",
+			"reason":  err.Error(),
+		})
+	} else if user.UserType == domain.SELLER && user.ID > 0 {
+		ctx.Locals("user", user)
+		return ctx.Next()
+	} else {
+		return ctx.Status(http.StatusUnauthorized).JSON(&fiber.Map{
+			"message": "autorization failed",
+			"reason":  errors.New("please join sellers program to continue"),
+		})
+	}
+}
+
 func (a Auth) GetCurrentUser(ctx *fiber.Ctx) domain.User {
 	user := ctx.Locals("user")
 	return user.(domain.User)
